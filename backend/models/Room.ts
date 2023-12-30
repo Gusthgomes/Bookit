@@ -59,7 +59,7 @@ const roomSchema: Schema = new Schema({
         type: String,
         required: [true, 'Please enter room name'],
         trim: true,
-        maxLength: [200, 'room name cannot exceed 200 characters']
+        maxLength: [1000, 'room name cannot exceed 1000 characters']
     },
 
     pricePerNight: {
