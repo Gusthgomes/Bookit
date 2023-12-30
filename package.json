@@ -6,9 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "seeder": "tsc seeder/seeder.ts --outDir .temp && node .temp/seeder/seeder.js && Remove-Item -Recurse -Force .temp"
   },
   "dependencies": {
+    "dotenv": "^16.3.1",
     "mongoose": "^8.0.3",
     "next": "14.0.4",
     "next-connect": "^1.0.0",
