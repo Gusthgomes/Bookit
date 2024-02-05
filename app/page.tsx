@@ -1,7 +1,10 @@
 import Home from "@/components/Home";
 import Error from "./error";
 
-export const revalidate = 0;
+export const metadata = {
+  title: "Home - BookIT",
+  description: "BookIT is a platform to book rooms for your meetings and conferences.",
+}
 
 const getRooms = async () => {
   const res = await fetch(`${process.env.API_URL}/api/rooms`);
