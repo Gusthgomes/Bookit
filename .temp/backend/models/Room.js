@@ -10,7 +10,7 @@ var roomSchema = new mongoose_1.Schema({
     },
     description: {
         type: String,
-        required: [true, 'Please enter room name'],
+        required: [true, 'Please enter room description'],
         trim: true,
         maxLength: [1000, 'room name cannot exceed 1000 characters']
     },
