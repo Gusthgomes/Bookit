@@ -19,6 +19,7 @@
     "react-bootstrap": "^2.10.0",
     "react-dom": "^18",
     "react-hot-toast": "^2.4.1",
+    "react-js-pagination": "^3.0.3",
     "react-star-rating": "^1.4.2"
   },
   "devDependencies": {
