@@ -42,9 +42,6 @@ async function auth(req: NextApiRequest, res: NextApiResponse) {
 
         callbacks: {
             jwt: async ({ token, user }) => {
-                console.log(token);
-                console.log(user);
-                
                 user && (token.user = user);
 
                 return token;
@@ -53,8 +50,9 @@ async function auth(req: NextApiRequest, res: NextApiResponse) {
             session: async ({ session, token }) => {
                 session.user = token.user as IUser;
 
-                console.log(session);
-                
+                // @ts-ignore
+                delete session?.user?.password;
+
                 return session;
             },
         },
