@@ -10,6 +10,7 @@
     "seeder": "tsc seeder/seeder.ts --outDir .temp && node .temp/seeder/seeder.js && Remove-Item -Recurse -Force .temp"
   },
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "bootstrap": "^5.3.2",
     "dotenv": "^16.3.1",
     "mongoose": "^8.0.3",
