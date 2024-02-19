@@ -25,7 +25,7 @@ export const catchAsyncErrors = (handler: HandlerFunction) => async(req: NextReq
 
         return NextResponse.json(
             {
-                message: error.message,
+                errMessage: error.message,
             },
             { status: error.statusCode || 500}
         );
