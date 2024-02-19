@@ -23,6 +23,13 @@ export const catchAsyncErrors = (handler: HandlerFunction) => async(req: NextReq
             error.statusCode = 400;
         }
 
+        // Handling mongoose duplicate key errors
+        if(error.code === 11000) {
+            error.message = `Duplicate ${Object.keys(error.keyValue)} entered`;
+            error.statusCode = 400;
+        
+        }
+
         return NextResponse.json(
             {
                 errMessage: error.message,
