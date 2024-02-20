@@ -5,6 +5,7 @@ import ErrorHandler from "../utils/errorHandler";
 import { upload_file, delete_file } from "../utils/cloudinary";
 import { resetPasswordHTMLTemplate } from "../utils/emailTemplate";
 import sendEmail from "../utils/sendEmail";
+import crypto from 'crypto';
 
 // Register user => /api/auth/register
 export const registerUser = catchAsyncErrors(async (req: NextRequest) => {
@@ -120,5 +121,41 @@ export const forgotPassword = catchAsyncErrors(async (req: NextRequest) => {
     return NextResponse.json({
         success: true,
         user,
+    });
+});
+
+// Reset password => /api/password/reset/:token
+export const resetPassword = catchAsyncErrors(async (req: NextRequest, { params }: { params: { token: string }}) => {
+    const body = await req.json();
+
+    // Hash the token
+    const resetPasswordToken = crypto
+    .createHash('sha256')
+    .update(params.token)
+    .digest('hex');
+
+    const user = await User.findOne({
+        resetPasswordToken,
+        resetPasswordExpire: { $gt: Date.now() }
+    });
+
+    if(!user) {
+        throw new ErrorHandler('Password reset token is invalid or has been expire! ', 404);
+    };
+
+    if(body.password !== body.confirmPassword) {
+        throw new ErrorHandler('Password does not match', 400);
+    };
+
+    // Set new password
+    user.password = body.password;
+
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+
+    await user.save();
+
+    return NextResponse.json({
+        success: true,
     });
 });
