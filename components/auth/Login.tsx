@@ -7,6 +7,11 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import ButtonLoader from '../layout/ButtonLoader';
 
+export const metadata = {
+    title: 'Login',
+    description: 'Login page',
+}
+
 const Login = () => {
 
     const [email, setEmail] = useState('');
