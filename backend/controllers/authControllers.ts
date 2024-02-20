@@ -58,7 +58,7 @@ export const updatePassword = catchAsyncErrors(async (req: NextRequest) => {
     });
 });
 
-// Upload user avatar => /api/me/update_avatar
+// Upload user avatar => /api/me/upload_avatar
 export const uploadAvatar = catchAsyncErrors(async (req: NextRequest) => {
     const body = await req.json();
 

@@ -31,8 +31,8 @@ const UploadAvatar = () => {
 
         reader.onload = () => {
             if(reader.readyState === 2) {
-                setAvatarPreview(reader.result as string);
                 setAvatar(reader.result as string);
+                setAvatarPreview(reader.result as string);
             }
         };
 
@@ -49,12 +49,12 @@ const UploadAvatar = () => {
 
     useEffect( () => {
         if(user?.avatar) {
-            setAvatarPreview(user.avatar.url);
+            setAvatarPreview(user?.avatar?.url);
         }
 
         if(error && 'data' in error) {
-            toast.error(error.data.errMessage);
-            toast.error('algo deu errado!');
+            toast.error('Error uploading avatar')
+            console.error(error.data);
 
             // TODO: REVISAR ERRO AO ATUALIZAR O AVATAR
         }
@@ -63,7 +63,7 @@ const UploadAvatar = () => {
             // @ts-ignore
             updateSession();
             router.refresh();
-            toast.success('Profile updated successfully');
+            toast.success('Avatar upload successfully');
         }
 
         return () => { }

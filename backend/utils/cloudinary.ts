@@ -25,10 +25,8 @@ const upload_file = ( file: string, folder: string ): Promise<{ public_id: strin
 const delete_file = async ( file: string): Promise<boolean> => {
     const res = await cloudinary.v2.uploader.destroy(file);
 
-    if(res?.result === 'ok') {
-        return true;
-    }
-
+    if(res?.result === 'ok') return true;
+        
     return false;
 }
 
