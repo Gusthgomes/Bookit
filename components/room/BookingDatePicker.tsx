@@ -1,7 +1,7 @@
 'use client';
 import { IRoom } from '@/backend/models/Room'
 import { calculateDaysOfStay } from '@/helpers/helpers';
-import { useNewBookingMutation } from '@/redux/api/bookingApi';
+import { useLazyCheckBookingAvailabilityQuery, useNewBookingMutation } from '@/redux/api/bookingApi';
 import React, { useState } from 'react'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
@@ -17,6 +17,9 @@ const BookingDatePicker = ({ room }: Props) => {
     const [ daysOfStay, setDaysOfStay ] = useState(0);
 
     const [newBookin] = useNewBookingMutation();
+    const [checkBookingAvailability, { data }] = useLazyCheckBookingAvailabilityQuery();
+
+    const isAvailable = data?.isAvailable;
 
     const bookRoom = () => {
         const bookingData = {
@@ -45,6 +48,11 @@ const BookingDatePicker = ({ room }: Props) => {
             setDaysOfStay(days);
 
             // check booking availability
+            checkBookingAvailability({
+                id: room._id,
+                checkInDate: checkInDate.toISOString(),
+                checkOutDate: checkOutDate.toISOString(),
+            })
         }
     };
 
@@ -70,6 +78,18 @@ const BookingDatePicker = ({ room }: Props) => {
                 selectsRange
                 inline
             />
+
+            { isAvailable === true && (
+                <div className='alert alert-success my-3'>
+                    Room is available. Book now.
+                </div>
+            )}
+
+            { isAvailable === false && (
+                <div className='alert alert-danger my-3'>
+                    Room not available. Try different dates.
+                </div>
+            )}
 
             <button className='btn py-3 form-btn w-100' onClick={bookRoom}>
                 Pay
