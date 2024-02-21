@@ -48,13 +48,13 @@ const UploadAvatar = () => {
     }
 
     useEffect( () => {
+
         if(user?.avatar) {
             setAvatarPreview(user?.avatar?.url);
         }
 
         if(error && 'data' in error) {
             toast.error('Error uploading avatar')
-            console.error(error.data);
 
             // TODO: REVISAR ERRO AO ATUALIZAR O AVATAR
         }
