@@ -54,9 +54,7 @@ const UploadAvatar = () => {
         }
 
         if(error && 'data' in error) {
-            toast.error('Error uploading avatar')
-
-            // TODO: REVISAR ERRO AO ATUALIZAR O AVATAR
+            toast.error('Error uploading avatar');
         }
 
         if(isSuccess) {
