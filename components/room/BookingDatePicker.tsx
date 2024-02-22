@@ -1,7 +1,7 @@
 'use client';
 import { IRoom } from '@/backend/models/Room'
 import { calculateDaysOfStay } from '@/helpers/helpers';
-import { useLazyCheckBookingAvailabilityQuery, useNewBookingMutation } from '@/redux/api/bookingApi';
+import { useGetBookedDatesQuery, useLazyCheckBookingAvailabilityQuery, useNewBookingMutation } from '@/redux/api/bookingApi';
 import React, { useState } from 'react'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
@@ -20,6 +20,10 @@ const BookingDatePicker = ({ room }: Props) => {
     const [checkBookingAvailability, { data }] = useLazyCheckBookingAvailabilityQuery();
 
     const isAvailable = data?.isAvailable;
+
+    const { data: { bookedDates: dates } = {} } = useGetBookedDatesQuery(room._id)
+
+    const excludeDates = dates?.map((date: string) => new Date(date)) || [];
 
     const bookRoom = () => {
         const bookingData = {
@@ -59,7 +63,7 @@ const BookingDatePicker = ({ room }: Props) => {
     return (
         <div className='booking-card shadow p-4'>
             <p className='price-per-night text-center'>
-                <b>${room?.pricePerNight}</b> / night
+                <b>${ room?.pricePerNight }</b> / night
             </p>
 
             <hr/>
@@ -70,11 +74,12 @@ const BookingDatePicker = ({ room }: Props) => {
 
             <DatePicker
                 className='w-100'
-                selected={checkInDate}
+                selected={ checkInDate }
                 onChange={ onChange }
-                startDate={checkInDate}
-                endDate={checkOutDate}
-                minDate={new Date()}
+                startDate={ checkInDate }
+                endDate={ checkOutDate }
+                minDate={ new Date() }
+                excludeDates={ excludeDates }
                 selectsRange
                 inline
             />
@@ -91,7 +96,7 @@ const BookingDatePicker = ({ room }: Props) => {
                 </div>
             )}
 
-            <button className='btn py-3 form-btn w-100' onClick={bookRoom}>
+            <button className='btn py-3 form-btn w-100' onClick={ bookRoom }>
                 Pay
             </button>
 
