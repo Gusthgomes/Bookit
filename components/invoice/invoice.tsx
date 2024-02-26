@@ -16,8 +16,6 @@ interface Props {
 const Invoice = ({ data }: Props) => {
   const booking = data?.booking;
 
-  console.log(booking?._id);
-
   const handleDownload = () => {
     const input = document.getElementById("booking_invoice");
     if (input) {
@@ -79,8 +77,8 @@ const Invoice = ({ data }: Props) => {
               <table className="mt-5">
                 <thead>
                   <tr>
-                    <th className="service">Room</th>
-                    <th className="desc">Price Per Night</th>
+                    <th className="service text-center">Name</th>
+                    <th className="desc text-center">E-mail</th>
                     <th>Check In Date</th>
                     <th>Check Out Date</th>
                     <th>Days of Stay</th>
@@ -88,15 +86,15 @@ const Invoice = ({ data }: Props) => {
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="service"> {booking?.room?.name}</td>
-                    <td className="desc">{booking?.room?.pricePerNight}</td>
+                    <td className="service"> {booking?.user?.name}</td>
+                    <td className="desc">{booking?.user?.email}</td>
                     <td className="unit">
                       {new Date(booking?.checkInDate).toLocaleString("es-US")}
                     </td>
                     <td className="qty">
                       {new Date(booking?.checkOutDate).toLocaleString("es-US")}
                     </td>
-                    <td className="qty">{booking?.daysOfStay}</td>
+                    <td className="qty text-center">{booking?.daysOfStay}</td>
                   </tr>
                   <tr>
                     <td colSpan={4} className="grand total">
