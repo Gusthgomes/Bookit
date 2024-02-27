@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { catchAsyncErrors } from "../middleware/catchAsyncErrors";
 import Room from "../models/Room";
+import User from "../models/User";
+import { headers } from "next/headers";
+import Booking from "../models/Booking";
 
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
@@ -45,3 +48,50 @@ export const stripeCheckoutSession = catchAsyncErrors(
     return NextResponse.json(session);
   }
 );
+
+// Create new booking after payment => /api/payment/webhook
+export const webhookCheckout = async (req: NextRequest) => {
+  try {
+    const rawBody = await req.text();
+    const signature = headers().get("stripe-signature");
+
+    const event = stripe.webhooks.constructEvent(
+      rawBody,
+      signature,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
+
+    if (event.type === "checkout.session.completed") {
+      const session = event.data.object;
+      const room = session.client_reference_id;
+      const user = (await User.findOne({ email: session?.customer_email })).id;
+
+      const amountPaid = session?.amount_total / 100;
+
+      const paymentInfo = {
+        id: session?.payment_intent,
+        status: session?.payment_status,
+      };
+
+      const checkInDate = session.metadata.checkInDate;
+      const checkOutDate = session.metadata.checkOutDate;
+      const daysOfStay = session.metadata.daysOfStay;
+
+      await Booking.create({
+        room,
+        user,
+        checkInDate,
+        checkOutDate,
+        daysOfStay,
+        amountPaid,
+        paymentInfo,
+        paidAt: Date.now(),
+      });
+
+      return NextResponse.json({ message: "Webhook received successfully" });
+    }
+  } catch (error: any) {
+    console.log("Error in stripe checkout webhook => ", error);
+    return NextResponse.json({ errMessage: error?.message });
+  }
+};
