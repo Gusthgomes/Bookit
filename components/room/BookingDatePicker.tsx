@@ -1,107 +1,159 @@
-'use client';
-import { IRoom } from '@/backend/models/Room'
-import { calculateDaysOfStay } from '@/helpers/helpers';
-import { useGetBookedDatesQuery, useLazyCheckBookingAvailabilityQuery, useNewBookingMutation } from '@/redux/api/bookingApi';
-import React, { useState } from 'react'
-import DatePicker from 'react-datepicker'
-import 'react-datepicker/dist/react-datepicker.css'
+"use client";
+import { IRoom } from "@/backend/models/Room";
+import { calculateDaysOfStay } from "@/helpers/helpers";
+import {
+  useGetBookedDatesQuery,
+  useLazyCheckBookingAvailabilityQuery,
+  useLazyStripeCheckoutQuery,
+  useNewBookingMutation,
+} from "@/redux/api/bookingApi";
+import { useAppSelector } from "@/redux/hooks";
+import { useRouter } from "next/navigation";
+import React, { useState, useEffect } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import toast from "react-hot-toast";
 
 interface Props {
-    room: IRoom
+  room: IRoom;
 }
 
 const BookingDatePicker = ({ room }: Props) => {
+  const [checkInDate, setCheckInDate] = useState(new Date());
+  const [checkOutDate, setCheckOutDate] = useState(new Date());
+  const [daysOfStay, setDaysOfStay] = useState(0);
 
-    const [ checkInDate, setCheckInDate ] = useState(new Date());
-    const [ checkOutDate, setCheckOutDate ] = useState(new Date());
-    const [ daysOfStay, setDaysOfStay ] = useState(0);
+  const router = useRouter();
 
-    const [newBookin] = useNewBookingMutation();
-    const [checkBookingAvailability, { data }] = useLazyCheckBookingAvailabilityQuery();
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
 
-    const isAvailable = data?.isAvailable;
+  const [newBookin] = useNewBookingMutation();
+  const [checkBookingAvailability, { data }] =
+    useLazyCheckBookingAvailabilityQuery();
 
-    const { data: { bookedDates: dates } = {} } = useGetBookedDatesQuery(room._id)
+  const isAvailable = data?.isAvailable;
 
-    const excludeDates = dates?.map((date: string) => new Date(date)) || [];
+  const { data: { bookedDates: dates } = {} } = useGetBookedDatesQuery(
+    room._id
+  );
 
-    const bookRoom = () => {
-        const bookingData = {
-            room: room?._id,
-            checkInDate,
-            checkOutDate,
-            daysOfStay,
-            amountPaid: room.pricePerNight * daysOfStay,
-            paymentInfo: {
-                id: 'STRIPE_ID',
-                status: 'PAID',
-            },
-        }
+  const excludeDates = dates?.map((date: string) => new Date(date)) || [];
 
-        newBookin(bookingData);
+  const [stripeCheckout, { error, isLoading, data: checkoutData }] =
+    useLazyStripeCheckoutQuery();
+
+  useEffect(() => {
+    if (error && "data" in error) {
+      toast.error(error?.data?.errMessage);
     }
 
-    const onChange = (dates: Date[]) => {
-        const [ checkInDate, checkOutDate ] = dates;
-        setCheckInDate(checkInDate);
-        setCheckOutDate(checkOutDate);
+    if (checkoutData) {
+      router.replace(checkoutData?.url);
+      console.log("entrou aqui");
+    }
+  }, [error, checkoutData]);
 
-        if(checkInDate && checkOutDate) {
-            const days = calculateDaysOfStay(checkInDate, checkOutDate);
+  const bookRoom = () => {
+    const amount = room.pricePerNight * daysOfStay;
 
-            setDaysOfStay(days);
-
-            // check booking availability
-            checkBookingAvailability({
-                id: room._id,
-                checkInDate: checkInDate.toISOString(),
-                checkOutDate: checkOutDate.toISOString(),
-            })
-        }
+    const checkoutData = {
+      checkInDate: checkInDate.toISOString(),
+      checkOutDate: checkOutDate.toISOString(),
+      daysOfStay,
+      amount,
     };
 
-    return (
-        <div className='booking-card shadow p-4'>
-            <p className='price-per-night text-center'>
-                <b>${ room?.pricePerNight }</b> / night
-            </p>
+    stripeCheckout({ id: room?._id, checkoutData });
+  };
 
-            <hr/>
+  {
+    /*
+    const bookRoom = () => {
+    const bookingData = {
+      room: room?._id,
+      checkInDate,
+      checkOutDate,
+      daysOfStay,
+      amountPaid: room.pricePerNight * daysOfStay,
+      paymentInfo: {
+        id: "STRIPE_ID",
+        status: "PAID",
+      },
+    };
 
-            <p className='mt5 mb-3 text-center'>
-                Pick Check In & Check Out Date
-            </p>
+    newBookin(bookingData);
+  };
+ */
+  }
 
-            <DatePicker
-                className='w-100'
-                selected={ checkInDate }
-                onChange={ onChange }
-                startDate={ checkInDate }
-                endDate={ checkOutDate }
-                minDate={ new Date() }
-                excludeDates={ excludeDates }
-                selectsRange
-                inline
-            />
+  const onChange = (dates: Date[]) => {
+    const [checkInDate, checkOutDate] = dates;
+    setCheckInDate(checkInDate);
+    setCheckOutDate(checkOutDate);
 
-            { isAvailable === true && (
-                <div className='alert alert-success my-3'>
-                    Room is available. Book now.
-                </div>
-            )}
+    if (checkInDate && checkOutDate) {
+      const days = calculateDaysOfStay(checkInDate, checkOutDate);
 
-            { isAvailable === false && (
-                <div className='alert alert-danger my-3'>
-                    Room not available. Try different dates.
-                </div>
-            )}
+      setDaysOfStay(days);
 
-            <button className='btn py-3 form-btn w-100' onClick={ bookRoom }>
-                Pay
-            </button>
+      // check booking availability
+      checkBookingAvailability({
+        id: room._id,
+        checkInDate: checkInDate.toISOString(),
+        checkOutDate: checkOutDate.toISOString(),
+      });
+    }
+  };
 
+  return (
+    <div className="booking-card shadow p-4">
+      <p className="price-per-night text-center">
+        <b>${room?.pricePerNight}</b> / night
+      </p>
+
+      <hr />
+
+      <p className="mt5 mb-3 text-center">Pick Check In & Check Out Date</p>
+
+      <DatePicker
+        className="w-100"
+        selected={checkInDate}
+        onChange={onChange}
+        startDate={checkInDate}
+        endDate={checkOutDate}
+        minDate={new Date()}
+        excludeDates={excludeDates}
+        selectsRange
+        inline
+      />
+
+      {isAvailable === true && (
+        <div className="alert alert-success my-3">
+          Room is available. Book now.
         </div>
-    )
-}
+      )}
 
-export default BookingDatePicker
+      {isAvailable === false && (
+        <div className="alert alert-danger my-3">
+          Room not available. Try different dates.
+        </div>
+      )}
+
+      {isAvailable && !isAuthenticated && (
+        <div className="alert alert-danger my-3">Login to book room.</div>
+      )}
+
+      {isAvailable && isAuthenticated && (
+        <button
+          className="btn py-3 form-btn w-100"
+          onClick={bookRoom}
+          disabled={isLoading}
+        >
+          Pay - ${daysOfStay * room?.pricePerNight}
+        </button>
+      )}
+    </div>
+  );
+};
+
+export default BookingDatePicker;
