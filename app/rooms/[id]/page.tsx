@@ -2,30 +2,32 @@ import Error from "@/app/error";
 import RoomDetails from "@/components/room/RoomDetails";
 
 type Props = {
-    params: {
-        id: string;
-    };
+  params: {
+    id: string;
+  };
 };
 
 const getRoom = async (id: string) => {
-    const res = await fetch(`${process.env.API_URL}/api/rooms/${id}`);
-    return res.json();
-}
+  const res = await fetch(`${process.env.API_URL}/api/rooms/${id}`, {
+    cache: "no-cache",
+  });
+  return res.json();
+};
 
 export default async function RoomsDetailsPage({ params }: Props) {
-    const data = await getRoom(params?.id);
+  const data = await getRoom(params?.id);
 
-    if(data?.errMessage){
-        return <Error error={ data }/>
-    }
+  if (data?.errMessage) {
+    return <Error error={data} />;
+  }
 
-    return <RoomDetails data={ data }/>
+  return <RoomDetails data={data} />;
 }
 
 export async function generateMetadata({ params }: Props) {
-    const data = await getRoom(params?.id);
+  const data = await getRoom(params?.id);
 
-    return {
-        title: data?.room?.name,
-    }
+  return {
+    title: data?.room?.name,
+  };
 }
