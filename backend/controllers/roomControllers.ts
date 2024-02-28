@@ -1,102 +1,163 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import Room, { IRoom } from "../models/Room";
+import Room, { IReview, IRoom } from "../models/Room";
 import ErrorHandler from "../utils/errorHandler";
 import { catchAsyncErrors } from "../middleware/catchAsyncErrors";
 import APIFilters from "../utils/apiFilters";
+import Booking from "../models/Booking";
 
 // Get all rooms => /api/rooms
 export const allRooms = catchAsyncErrors(async (req: NextRequest) => {
+  const resPerPage: number = 8;
 
-    const resPerPage: number = 8;
+  const { searchParams } = new URL(req.url);
 
-    const { searchParams } = new URL(req.url);
+  //throw new ErrorHandler('ErrorPage', 400);
 
-    //throw new ErrorHandler('ErrorPage', 400);
+  const queryStr: any = {};
 
-    const queryStr: any = {};
+  searchParams.forEach((value, key) => {
+    queryStr[key] = value;
+  });
 
-    searchParams.forEach((value, key) => {
-        queryStr[key] = value;
-    });
+  const apiFilters = new APIFilters(Room, queryStr).search().filter();
 
-    const apiFilters = new APIFilters(Room, queryStr).search().filter()
+  let rooms: IRoom[] = await apiFilters.query;
+  const filteredRoomsCount: number = rooms.length;
 
-    let rooms: IRoom[] = await apiFilters.query;
-    const filteredRoomsCount: number = rooms.length;
+  apiFilters.pagination(resPerPage);
+  rooms = await apiFilters.query.clone();
 
-    apiFilters.pagination(resPerPage);
-    rooms = await apiFilters.query.clone();
-
-    return NextResponse.json({
-        success: true,
-        filteredRoomsCount,
-        resPerPage,
-        rooms
-    });
+  return NextResponse.json({
+    success: true,
+    filteredRoomsCount,
+    resPerPage,
+    rooms,
+  });
 });
 
 // Create new room => /api/admin/rooms
 export const newRoom = catchAsyncErrors(async (req: NextRequest) => {
-    const body = await req.json();
+  const body = await req.json();
 
-    const room = await Room.create(body);
+  const room = await Room.create(body);
 
-    return NextResponse.json({
-        success: true,
-        room,
-    });
+  return NextResponse.json({
+    success: true,
+    room,
+  });
 });
 
 // Get room details => /api/rooms/:id
-export const getRoomDetails = catchAsyncErrors(async (req: NextRequest, { params }: { params: { id: string } }) => {
-    
-    const room = await Room.findById(params.id);
+export const getRoomDetails = catchAsyncErrors(
+  async (req: NextRequest, { params }: { params: { id: string } }) => {
+    const room = await Room.findById(params.id).populate("reviews.user");
 
     if (!room) {
-        throw new ErrorHandler('Room not found', 404);
+      throw new ErrorHandler("Room not found", 404);
     }
 
     return NextResponse.json({
-        success: true,
-        room,
+      success: true,
+      room,
     });
-});
+  }
+);
 
 // Update room details => /api/admin/rooms/:id
-export const updateRoom = catchAsyncErrors(async (req: NextRequest, { params }: { params: { id: string } }) => {
+export const updateRoom = catchAsyncErrors(
+  async (req: NextRequest, { params }: { params: { id: string } }) => {
     let room = await Room.findById(params.id);
     const body = await req.json();
 
     if (!room) {
-        throw new ErrorHandler('Room not found', 404);
+      throw new ErrorHandler("Room not found", 404);
     }
 
     room = await Room.findByIdAndUpdate(params.id, body, {
-        new: true,
+      new: true,
     });
-
 
     return NextResponse.json({
-        success: true,
-        room,
+      success: true,
+      room,
     });
-});
+  }
+);
 
 // Delete room details => /api/admin/rooms/:id
-export const deleteRoom = catchAsyncErrors(async (req: NextRequest, { params }: { params: { id: string } }) => {
+export const deleteRoom = catchAsyncErrors(
+  async (req: NextRequest, { params }: { params: { id: string } }) => {
     const room = await Room.findById(params.id);
 
     if (!room) {
-        throw new ErrorHandler('Room not found', 404);
+      throw new ErrorHandler("Room not found", 404);
     }
 
     // TODO - Delete images associated with the room
 
     await room.deleteOne();
 
-
     return NextResponse.json({
-        success: true,
+      success: true,
     });
+  }
+);
+
+// Create/Update room review => /api/reviews
+export const createRoomReview = catchAsyncErrors(async (req: NextRequest) => {
+  const body = await req.json();
+
+  const { rating, comment, roomId } = body;
+
+  const review = {
+    user: req.user._id,
+    rating: Number(rating),
+    comment,
+  };
+
+  const room = await Room.findById(roomId);
+
+  const isReview = room?.reviews?.find(
+    (r: IReview) => r.user?.toString() === req?.user?._id?.toString()
+  );
+
+  if (isReview) {
+    room?.reviews?.forEach((review: IReview) => {
+      if (review.user?.toString() === req?.user?._id?.toString()) {
+        review.comment = comment;
+        review.rating = rating;
+      }
+    });
+  } else {
+    room.reviews.push(review);
+    room.numOfReviews = room.reviews.length;
+  }
+
+  room.rattings =
+    room?.reviews?.reduce(
+      (acc: number, item: { ratting: number }) => item.ratting + acc,
+      0
+    ) / room?.reviews?.length;
+
+  await room.save();
+
+  return NextResponse.json({
+    success: true,
+  });
+});
+
+// Can user review room => /api/reviews/can_review
+export const canReview = catchAsyncErrors(async (req: NextRequest) => {
+  const { searchParams } = new URL(req.url);
+  const roomId = searchParams.get("roomId");
+
+  const bookings = await Booking.find({ user: req.user._id, room: roomId });
+
+  const canReview = bookings?.length > 0 ? true : false;
+
+  return NextResponse.json({
+    success: true,
+    canReview,
+  });
 });
