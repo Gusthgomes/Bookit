@@ -2,20 +2,38 @@ import { getToken } from "next-auth/jwt";
 import { NextRequest, NextResponse } from "next/server";
 import { IUser } from "../models/User";
 
+export const isAuthenticated = async (
+  req: NextRequest,
+  event: any,
+  next: any
+) => {
+  const session = await getToken({ req });
 
-export const isAuthenticated = async ( req: NextRequest, event: any, next: any ) => {
-    const session = await getToken({ req })
+  if (!session) {
+    return NextResponse.json(
+      {
+        message: "Login first to access this resource.",
+      },
+      { status: 401 }
+    );
+  }
 
-    if(!session) {
-        return NextResponse.json(
-            {
-            message: 'Login first to access this resource.',
-            },
-            { status: 401}
-        );
-    };
+  req.user = session.user as IUser;
 
-    req.user = session.user as IUser;
+  return next();
+};
+
+export const authorizeRoles = (...roles: string[]) => {
+  return (req: NextRequest, event: any, next: any) => {
+    if (!roles.includes(req.user.role)) {
+      return NextResponse.json(
+        {
+          errMessage: `Role (${req.user.role}) is not allowed to access this resource.`,
+        },
+        { status: 403 }
+      );
+    }
 
     return next();
-}
+  };
+};
