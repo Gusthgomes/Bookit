@@ -21,39 +21,66 @@ ChartJS.register(
   Legend
 );
 
-export const options = {
-  responsive: true,
-  plugins: {
-    legend: {
-      position: "top" as const,
-    },
-    title: {
-      display: true,
-      text: "Last 6 Months Performance",
-    },
-  },
-};
+interface SalesData {
+  monthName: string;
+  totalSales: number;
+  numOfBookings: number;
+}
 
-const labels = ["January", "February", "March", "April", "May", "June", "July"];
+interface Props {
+  salesData: SalesData[];
+}
 
-export const data = {
-  labels,
-  datasets: [
-    {
-      label: "Sales",
-      data: [65, 59, 80, 81, 56, 55, 40],
-      boderColor: "rgb(255, 99, 132)",
-      backgroundColor: "rgba(255, 99, 132, 0.5)",
+export function SalesChart({ salesData }: Props) {
+  const options = {
+    responsive: true,
+    interaction: {
+      mode: "index" as const,
+      intersect: false,
     },
-    {
-      label: "Bookings",
-      data: [65, 59, 80, 81, 56, 55, 40],
-      boderColor: "rgb(53, 162, 235)",
-      backgroundColor: "rgba(53, 162, 235, 0.5)",
+    stacked: false,
+    plugins: {
+      title: {
+        display: true,
+        text: "Last 6 months performance",
+      },
     },
-  ],
-};
+    scales: {
+      y: {
+        type: "linear" as const,
+        display: true,
+        position: "left" as const,
+      },
+      y1: {
+        type: "linear" as const,
+        display: true,
+        position: "right" as const,
+        grid: {
+          drawOnChartArea: false,
+        },
+      },
+    },
+  };
 
-export function SalesChart() {
+  const data = {
+    labels: salesData.map((data) => data.monthName).reverse(),
+    datasets: [
+      {
+        label: "Sales",
+        data: salesData.map((data) => data.totalSales).reverse(),
+        boderColor: "rgb(255, 99, 132)",
+        backgroundColor: "rgba(255, 99, 132, 0.5)",
+        yAxisID: "y",
+      },
+      {
+        label: "Bookings",
+        data: salesData.map((data) => data.numOfBookings).reverse(),
+        boderColor: "rgb(53, 162, 235)",
+        backgroundColor: "rgba(53, 162, 235, 0.5)",
+        yAxisID: "y1",
+      },
+    ],
+  };
+
   return <Line data={data} options={options} />;
 }
