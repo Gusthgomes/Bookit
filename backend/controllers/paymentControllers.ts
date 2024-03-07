@@ -65,9 +65,6 @@ export const webhookCheckout = async (req: NextRequest) => {
       const session = event.data.object;
       const room = session.client_reference_id;
 
-      console.log("Room id => ", room);
-      console.log("session => ", session);
-
       const user = (await User.findOne({ email: session?.customer_email })).id;
 
       const amountPaid = session?.amount_total / 100;
