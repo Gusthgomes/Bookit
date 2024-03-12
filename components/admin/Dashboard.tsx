@@ -8,7 +8,7 @@ import { SalesChart } from "../charts/SalesCharts";
 import { TopPerformingChart } from "../charts/TopPerformingChart";
 import { useLazyGetSalesStatsQuery } from "@/redux/api/bookingApi";
 import toast from "react-hot-toast";
-import Loading from "@/app/admin/loading";
+import Loading from "@/app/loading";
 
 const Dashboard = () => {
   const [startDate, setStartDate] = useState(new Date());
@@ -19,7 +19,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (error && "data" in error) {
-      toast.error(error?.data?.message);
+      toast.error(error?.data?.errMessage);
     }
 
     if (startDate && endDate && !data) {
