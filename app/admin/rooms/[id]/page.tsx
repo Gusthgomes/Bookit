@@ -16,7 +16,7 @@ const getRooms = async (id: string) => {
   return res.json();
 };
 
-export default async function AdminRoomsPage({
+export default async function AdminUpdateRoomsPage({
   params,
 }: {
   params: { id: string };
