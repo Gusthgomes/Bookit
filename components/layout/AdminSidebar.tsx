@@ -44,10 +44,10 @@ const AdminSidebar = () => {
           key={index}
           href={menItem.url}
           className={`fw-bold list-group-item list-group-item-action ${
-            activeMenu === menItem.name ? "active" : ""
+            activeMenu.includes(menItem.url) ? "active" : ""
           }`}
           onClick={() => handlerMenuItemClick(menItem.name)}
-          aria-current={activeMenu === menItem.name ? "true" : "false"}
+          aria-current={activeMenu.includes(menItem.url) ? "true" : "false"}
         >
           <i className={`${menItem.icon} fa-fw pe-2`}></i> {menItem.name}
         </Link>
@@ -55,5 +55,9 @@ const AdminSidebar = () => {
     </div>
   );
 };
+
+{
+  /* qqc muda para menItem.name  no onClick*/
+}
 
 export default AdminSidebar;
