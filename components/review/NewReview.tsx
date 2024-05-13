@@ -4,6 +4,7 @@ import {
   useCanUserReviewQuery,
   usePostReviewMutation,
 } from "@/redux/api/roomApi";
+import { revalidateTag } from "next/cache";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
@@ -23,7 +24,8 @@ const NewReview = ({ roomId }: { roomId: string }) => {
     }
 
     if (isSuccess) {
-      toast.success("Reciew posted!");
+      revalidateTag("roomDetails");
+      toast.success("Review posted!");
       router.refresh();
     }
   }, [error, isSuccess]);
